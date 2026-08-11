@@ -1102,274 +1102,126 @@ function buildCalculatorFields() {
 
 
 /* =========================================================
-   GRAPH
+   GRAPHS
    ========================================================= */
 
 function renderChart(rows) {
-
-  const container =
-    $("chart");
-
-  if (
-    !container ||
-    !rows ||
-    !rows.length
-  ) {
+  const container = document.getElementById('chart');
+  if (!container || !rows || !rows.length) {
+    console.warn('Chart container not found or empty rows');
     return;
   }
 
+  const NS = "http://www.w3.org/2000/svg";
+  const svg = document.createElementNS(NS, "svg");
+  svg.setAttribute("viewBox", "0 0 900 260");
+  svg.setAttribute("preserveAspectRatio", "none");
+  svg.setAttribute("width", "100%");
+  svg.setAttribute("height", "100%");
 
-  const NS =
-    "http://www.w3.org/2000/svg";
+  const W = 900, H = 260;
+  const left = 60, right = 20, top = 20, bottom = 30;
+  const plotWidth = W - left - right;
+  const plotHeight = H - top - bottom;
 
+  const maxValue = Math.max(1, ...rows.map(row => Math.max(row.propertyValue, Math.max(0, row.equity))));
+  const x = index => left + plotWidth * index / Math.max(1, rows.length - 1);
+  const y = value => top + plotHeight * (1 - value / maxValue);
 
-  const svg =
-    document.createElementNS(
-      NS,
-      "svg"
-    );
-
-
-  svg.setAttribute(
-    "viewBox",
-    "0 0 900 260"
-  );
-
-
-  svg.setAttribute(
-    "preserveAspectRatio",
-    "none"
-  );
-
-
-  const W = 900;
-  const H = 260;
-
-  const left = 60;
-  const right = 20;
-  const top = 20;
-  const bottom = 30;
-
-
-  const plotWidth =
-    W -
-    left -
-    right;
-
-
-  const plotHeight =
-    H -
-    top -
-    bottom;
-
-
-  const maxValue =
-    Math.max(
-      1,
-      ...rows.map(
-        row =>
-          Math.max(
-            row.propertyValue,
-            Math.max(
-              0,
-              row.equity
-            )
-          )
-      )
-    );
-
-
-  const x =
-    index =>
-      left +
-      plotWidth *
-      index /
-      Math.max(
-        1,
-        rows.length - 1
-      );
-
-
-  const y =
-    value =>
-      top +
-      plotHeight *
-      (
-        1 -
-        value /
-        maxValue
-      );
-
-
-  function svgElement(
-    tag,
-    attributes
-  ) {
-
-    const element =
-      document.createElementNS(
-        NS,
-        tag
-      );
-
-
-    Object.entries(
-      attributes
-    ).forEach(
-      ([key, value]) => {
-
-        element.setAttribute(
-          key,
-          value
-        );
-
-      }
-    );
-
-
+  function svgElement(tag, attributes) {
+    const element = document.createElementNS(NS, tag);
+    Object.entries(attributes).forEach(([key, value]) => element.setAttribute(key, value));
     return element;
   }
 
-
-  /*
-   * Grid
-   */
-
-  for (
-    let i = 0;
-    i < 4;
-    i++
-  ) {
-
-    const gridY =
-      top +
-      plotHeight *
-      i / 3;
-
-
-    svg.appendChild(
-      svgElement(
-        "line",
-        {
-          x1: left,
-          y1: gridY,
-          x2: W - right,
-          y2: gridY,
-          class: "gridline"
-        }
-      )
-    );
+  // Grid lines
+  for (let i = 0; i < 4; i++) {
+    const gridY = top + plotHeight * i / 3;
+    svg.appendChild(svgElement('line', { x1: left, y1: gridY, x2: W - right, y2: gridY, class: 'gridline' }));
   }
 
+  // Property value
+  const propertyPoints = rows.map((row, index) => `${x(index)},${y(row.propertyValue)}`).join(' ');
+  svg.appendChild(svgElement('polyline', { points: propertyPoints, class: 'path' }));
 
-  /*
-   * Property value
-   */
+  // Equity
+  const equityPoints = rows.map((row, index) => `${x(index)},${y(Math.max(0, row.equity))}`).join(' ');
+  svg.appendChild(svgElement('polyline', { points: equityPoints, class: 'eq' }));
 
-  const propertyPoints =
-    rows
-      .map(
-        (row, index) =>
-          `${x(index)},${y(
-            row.propertyValue
-          )}`
-      )
-      .join(" ");
-
-
-  /*
-   * Equity
-   */
-
-  const equityPoints =
-    rows
-      .map(
-        (row, index) =>
-          `${x(index)},${y(
-            Math.max(
-              0,
-              row.equity
-            )
-          )}`
-      )
-      .join(" ");
-
-
-  svg.appendChild(
-    svgElement(
-      "polyline",
-      {
-        points:
-          propertyPoints,
-
-        class:
-          "path"
-      }
-    )
-  );
-
-
-  svg.appendChild(
-    svgElement(
-      "polyline",
-      {
-        points:
-          equityPoints,
-
-        class:
-          "eq"
-      }
-    )
-  );
-
-
-  /*
-   * Year labels
-   */
-
-  rows.forEach(
-    (row, index) => {
-
-      if (
-        index === 0 ||
-        index ===
-          rows.length - 1 ||
-        index % 5 === 0
-      ) {
-
-        const label =
-          svgElement(
-            "text",
-            {
-              x: x(index),
-              y: H - 8,
-              "text-anchor":
-                "middle",
-              fill:
-                "#71838d",
-              "font-size":
-                "9"
-            }
-          );
-
-
-        label.textContent =
-          "Y" + row.year;
-
-
-        svg.appendChild(
-          label
-        );
-      }
+  // Year labels
+  rows.forEach((row, index) => {
+    if (index === 0 || index === rows.length - 1 || index % 5 === 0) {
+      const label = svgElement('text', { x: x(index), y: H - 8, 'text-anchor': 'middle', fill: '#71838d', 'font-size': '9' });
+      label.textContent = 'Y' + row.year;
+      svg.appendChild(label);
     }
-  );
+  });
 
+  container.innerHTML = '';
+  container.appendChild(svg);
+  console.log('✅ Property chart rendered');
+}
 
-  container.innerHTML = "";
+function renderChart2(rows) {
+  const container = document.getElementById('chart2');
+  if (!container || !rows || !rows.length) {
+    console.warn('Chart2 container not found or empty rows');
+    return;
+  }
 
-  container.appendChild(
-    svg
-  );
+  const NS = "http://www.w3.org/2000/svg";
+  const svg = document.createElementNS(NS, "svg");
+  svg.setAttribute("viewBox", "0 0 900 260");
+  svg.setAttribute("preserveAspectRatio", "none");
+  svg.setAttribute("width", "100%");
+  svg.setAttribute("height", "100%");
+
+  const W = 900, H = 260;
+  const left = 60, right = 20, top = 20, bottom = 30;
+  const plotW = W - left - right;
+  const plotH = H - top - bottom;
+
+  const maxVal = Math.max(1, ...rows.map(r => Math.max(r.noi, Math.abs(r.cashFlow))));
+  const x = i => left + plotW * i / Math.max(1, rows.length - 1);
+  const y = v => top + plotH * (1 - (v + maxVal) / (2 * maxVal));
+
+  function el(tag, attrs) {
+    const e = document.createElementNS(NS, tag);
+    for (let [k, v] of Object.entries(attrs)) e.setAttribute(k, v);
+    return e;
+  }
+
+  // Grid
+  for (let i = 0; i < 5; i++) {
+    const yy = top + plotH * i / 4;
+    svg.appendChild(el('line', { x1: left, y1: yy, x2: W - right, y2: yy, class: 'gridline' }));
+  }
+  // Zero line
+  const zeroY = y(0);
+  svg.appendChild(el('line', { x1: left, y1: zeroY, x2: W - right, y2: zeroY, stroke: '#66818e40', strokeWidth: 1 }));
+
+  // NOI path
+  const noiPoints = rows.map((r, i) => `${x(i)},${y(r.noi)}`).join(' ');
+  svg.appendChild(el('polyline', { points: noiPoints, class: 'path' }));
+
+  // Cash flow path (gold)
+  const cfPoints = rows.map((r, i) => `${x(i)},${y(r.cashFlow)}`).join(' ');
+  const cfPath = el('polyline', { points: cfPoints, class: 'eq' });
+  cfPath.setAttribute('stroke', 'var(--gold)');
+  svg.appendChild(cfPath);
+
+  // Year labels
+  rows.forEach((r, i) => {
+    if (i === 0 || i === rows.length - 1 || i % 5 === 0) {
+      const label = el('text', { x: x(i), y: H - 8, 'text-anchor': 'middle', fill: '#71838d', 'font-size': '9' });
+      label.textContent = 'Y' + r.year;
+      svg.appendChild(label);
+    }
+  });
+
+  container.innerHTML = '';
+  container.appendChild(svg);
+  console.log('✅ Returns chart rendered');
 }
 
 
@@ -2487,6 +2339,11 @@ function calculate() {
   );
 
 
+  renderChart2(
+    result.rows
+  );
+
+
   renderYearTable(
     result.rows
   );
@@ -2632,20 +2489,6 @@ function updateTuner() {
    NAVIGATION
    ========================================================= */
 
-/*
- * IMPORTANT:
- *
- * HTML navigation names:
- *
- * property  -> decision
- * finance   -> calculator
- * returns   -> yearly
- * scenarios -> scenario
- * compare   -> compare
- *
- * This mapping fixes the tab bug.
- */
-
 const SECTION_TO_VIEW = {
 
   property:
@@ -2680,9 +2523,7 @@ const SECTION_TO_VIEW = {
 };
 
 
-function showView(
-  section
-) {
+function showView(section) {
 
   const viewName =
     SECTION_TO_VIEW[
@@ -2691,10 +2532,7 @@ function showView(
     "decision";
 
 
-  /*
-   * Hide every view
-   */
-
+  // Hide all views
   document
     .querySelectorAll(
       ".view"
@@ -2702,21 +2540,31 @@ function showView(
     .forEach(
       view => {
 
-        view.classList.toggle(
-          "hidden",
-
-          view.dataset.view !==
-          viewName
+        view.classList.add(
+          "hidden"
         );
 
       }
     );
 
 
-  /*
-   * Active sidebar/mobile item
-   */
+  // Show target
+  const target =
+    document.querySelector(
+      `.view[data-view="${viewName}"]`
+    );
 
+
+  if (target) {
+
+    target.classList.remove(
+      "hidden"
+    );
+
+  }
+
+
+  // Update sidebar and mobile tabs
   document
     .querySelectorAll(
       "[data-section]"
@@ -2736,10 +2584,7 @@ function showView(
     );
 
 
-  /*
-   * Top mode indicator
-   */
-
+  // Update top mode pills
   let mode =
     "decision";
 
@@ -2789,14 +2634,10 @@ function showView(
     );
 
 
-  /*
-   * Redraw graph when returning
-   * to Property.
-   */
-
+  // Re‑draw charts if switching to Property or Returns
   if (
-    viewName ===
-    "decision"
+    viewName === "decision" ||
+    viewName === "yearly"
   ) {
 
     const result =
@@ -2804,10 +2645,34 @@ function showView(
         getInputs()
       );
 
-    renderChart(
-      result.rows
-    );
+
+    if (
+      viewName === "decision"
+    ) {
+
+      renderChart(
+        result.rows
+      );
+
+    }
+
+
+    if (
+      viewName === "yearly"
+    ) {
+
+      renderChart2(
+        result.rows
+      );
+
+    }
+
   }
+
+
+  console.log(
+    `Active view: ${viewName} (from section: ${section})`
+  );
 }
 
 
@@ -2846,182 +2711,162 @@ function openModal(
 
 
 /* =========================================================
-   CHATBOT RULES
+   CHATBOT RULES (8 rules)
    ========================================================= */
 
 const CHAT_RULES = {
 
   rent: {
-
-    title:
-      "Rent Growth Analysis",
-
-    question:
-      "“What happens to my IRR if rent grows only 1% a year?”",
-
+    title: "Rent Growth Analysis",
+    question: "“What happens to my IRR if rent grows only 1% a year?”",
     run(inputs) {
-
-      return calculateModel({
-
-        ...inputs,
-
-        rentgrowth:
-          0.01
-      });
+      return calculateModel({ ...inputs, rentgrowth: 0.01 });
     },
-
     answer(base, stressed) {
-
       return `
         At 1% annual rent growth,
         modeled IRR changes from
-        <b>${percent(
-          base.irr * 100
-        )}</b>
+        <b>${percent(base.irr * 100)}</b>
         to
-        <b>${percent(
-          stressed.irr * 100
-        )}</b>.
+        <b>${percent(stressed.irr * 100)}</b>.
       `;
     }
   },
 
-
   vacancy: {
-
-    title:
-      "Vacancy Stress Test",
-
-    question:
-      "“What happens if vacancy rises to 10%?”",
-
+    title: "Vacancy Stress Test",
+    question: "“What happens if vacancy rises to 10%?”",
     run(inputs) {
-
-      return calculateModel({
-
-        ...inputs,
-
-        vacancy:
-          0.10
-      });
+      return calculateModel({ ...inputs, vacancy: 0.10 });
     },
-
     answer(base, stressed) {
-
       return `
         At 10% vacancy,
         modeled IRR becomes
-        <b>${percent(
-          stressed.irr * 100
-        )}</b>.
-
+        <b>${percent(stressed.irr * 100)}</b>.
         Year-1 monthly cash flow becomes
-        <b>${money(
-          stressed.rows[0].cashFlow /
-          12
-        )}</b>.
+        <b>${money(stressed.rows[0].cashFlow / 12)}</b>.
       `;
     }
   },
-
 
   rate: {
-
-    title:
-      "Mortgage Rate Stress Test",
-
-    question:
-      "“What happens if my mortgage rises by 2%?”",
-
+    title: "Mortgage Rate Stress Test",
+    question: "“What happens if my mortgage rises by 2%?”",
     run(inputs) {
-
-      return calculateModel({
-
-        ...inputs,
-
-        rate:
-          inputs.rate + 2
-      });
+      return calculateModel({ ...inputs, rate: inputs.rate + 2 });
     },
-
     answer(base, stressed, inputs) {
-
       return `
         At a mortgage rate of
-        <b>${percent(
-          inputs.rate + 2
-        )}</b>,
+        <b>${percent(inputs.rate + 2)}</b>,
         modeled IRR becomes
-        <b>${percent(
-          stressed.irr * 100
-        )}</b>.
+        <b>${percent(stressed.irr * 100)}</b>.
       `;
     }
   },
 
-
   why: {
-
-    title:
-      "Investment Analysis",
-
-    question:
-      "“Why is this deal strong?”",
-
+    title: "Investment Analysis",
+    question: "“Why is this deal strong?”",
     run(inputs) {
-
-      return calculateModel(
-        inputs
-      );
+      return calculateModel(inputs);
     },
-
     answer(base) {
-
-      const score =
-        investmentScore(
-          base
-        );
-
-
+      const score = investmentScore(base);
       return `
-
-        <p>
-          Investment score:
-          <b>${score}/100</b>
-        </p>
-
+        <p>Investment score: <b>${score}/100</b></p>
         <ul>
-
-          <li>
-            Cap rate:
-            ${percent(
-              base.capRate * 100
-            )}
-          </li>
-
-          <li>
-            IRR:
-            ${percent(
-              base.irr * 100
-            )}
-          </li>
-
-          <li>
-            DSCR:
-            ${base.dscr.toFixed(
-              2
-            )}×
-          </li>
-
-          <li>
-            Break-even occupancy:
-            ${percent(
-              base.breakEvenOccupancy *
-              100
-            )}
-          </li>
-
+          <li>Cap rate: ${percent(base.capRate * 100)}</li>
+          <li>IRR: ${percent(base.irr * 100)}</li>
+          <li>DSCR: ${base.dscr.toFixed(2)}×</li>
+          <li>Break-even occupancy: ${percent(base.breakEvenOccupancy * 100)}</li>
         </ul>
+      `;
+    }
+  },
+
+  expenses: {
+    title: "Expense Shock Test",
+    question: "“What if operating expenses increase by 10%?”",
+    run(inputs) {
+      const shocked = { ...inputs };
+      shocked.maint = Math.min(0.99, shocked.maint * 1.1);
+      shocked.management = Math.min(0.99, shocked.management * 1.1);
+      shocked.capex = Math.min(0.99, shocked.capex * 1.1);
+      shocked.tax *= 1.1;
+      shocked.insurance *= 1.1;
+      shocked.other *= 1.1;
+      return calculateModel(shocked);
+    },
+    answer(base, stressed) {
+      return `
+        With a 10% increase in operating expenses,
+        modeled IRR drops from
+        <b>${percent(base.irr * 100)}</b>
+        to
+        <b>${percent(stressed.irr * 100)}</b>.
+        Year-1 cash flow changes from
+        <b>${money(base.rows[0].cashFlow / 12)}</b>
+        to
+        <b>${money(stressed.rows[0].cashFlow / 12)}</b>.
+      `;
+    }
+  },
+
+  exitcap: {
+    title: "Exit Cap Expansion",
+    question: "“What if the exit cap rate rises to 7%?”",
+    run(inputs) {
+      return calculateModel({ ...inputs, exitcap: 0.07 });
+    },
+    answer(base, stressed) {
+      return `
+        With an exit cap rate of 7%,
+        modeled IRR changes from
+        <b>${percent(base.irr * 100)}</b>
+        to
+        <b>${percent(stressed.irr * 100)}</b>.
+        Exit equity becomes
+        <b>${money(stressed.exitEquity)}</b>.
+      `;
+    }
+  },
+
+  appreciation: {
+    title: "Slower Appreciation",
+    question: "“What if property appreciation drops to 1%?”",
+    run(inputs) {
+      return calculateModel({ ...inputs, appreciation: 0.01 });
+    },
+    answer(base, stressed) {
+      return `
+        At 1% annual appreciation,
+        modeled IRR changes from
+        <b>${percent(base.irr * 100)}</b>
+        to
+        <b>${percent(stressed.irr * 100)}</b>.
+        Final property value becomes
+        <b>${money(stressed.rows[stressed.rows.length - 1].propertyValue)}</b>.
+      `;
+    }
+  },
+
+  reno: {
+    title: "Renovation Overrun",
+    question: "“What if the renovation budget doubles?”",
+    run(inputs) {
+      return calculateModel({ ...inputs, reno: inputs.reno * 2 });
+    },
+    answer(base, stressed) {
+      return `
+        With a doubled renovation budget,
+        modeled IRR changes from
+        <b>${percent(base.irr * 100)}</b>
+        to
+        <b>${percent(stressed.irr * 100)}</b>.
+        Initial cash invested becomes
+        <b>${money(stressed.initialCash)}</b>.
       `;
     }
   }
@@ -3407,6 +3252,125 @@ function initialize() {
 
       }
     );
+
+
+  /*
+   * Chat input (natural language)
+   */
+
+  const chatInput =
+    document.getElementById(
+      "chatInput"
+    );
+
+
+  const chatSend =
+    document.getElementById(
+      "chatSend"
+    );
+
+
+  if (
+    chatInput &&
+    chatSend
+  ) {
+
+    const sendMessage =
+      () => {
+
+        const text =
+          chatInput.value
+            .trim()
+            .toLowerCase();
+
+
+        if (!text) {
+          return;
+        }
+
+
+        // Match against all 8 rules
+        if (
+          text.includes(
+            "rent"
+          ) ||
+          text.includes(
+            "growth"
+          )
+        ) {
+          askModel("rent");
+        } else if (
+          text.includes("vacancy")
+        ) {
+          askModel("vacancy");
+        } else if (
+          text.includes("rate") ||
+          text.includes("mortgage") ||
+          text.includes("interest")
+        ) {
+          askModel("rate");
+        } else if (
+          text.includes("why") ||
+          text.includes("strong") ||
+          text.includes("score")
+        ) {
+          askModel("why");
+        } else if (
+          text.includes("expense") ||
+          text.includes("operating") ||
+          text.includes("cost")
+        ) {
+          askModel("expenses");
+        } else if (
+          text.includes("exit") ||
+          text.includes("cap rate")
+        ) {
+          askModel("exitcap");
+        } else if (
+          text.includes("appreciation") ||
+          text.includes("value")
+        ) {
+          askModel("appreciation");
+        } else if (
+          text.includes("reno") ||
+          text.includes("renovation") ||
+          text.includes("budget")
+        ) {
+          askModel("reno");
+        } else {
+          openModal(
+            "Available commands",
+            `<p>I understand: <b>rent</b>, <b>vacancy</b>, <b>rate</b>, <b>why</b>, <b>expenses</b>, <b>exit cap</b>, <b>appreciation</b>, or <b>renovation</b>.</p>`
+          );
+        }
+
+
+        chatInput.value =
+          "";
+      };
+
+
+    chatSend.addEventListener(
+      "click",
+      sendMessage
+    );
+
+
+    chatInput.addEventListener(
+      "keydown",
+      event => {
+
+        if (
+          event.key ===
+          "Enter"
+        ) {
+
+          sendMessage();
+        }
+
+      }
+    );
+  }
 
 
   /*
