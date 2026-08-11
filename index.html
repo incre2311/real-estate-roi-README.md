@@ -1,696 +1,351 @@
-<!DOCTYPE html>
-
-<html lang=“en”>
-
+<!doctype html>
+<html lang="en">
 <head>
-
-<meta charset="UTF-8">
-<meta
-    name="viewport"
-    content="width=device-width,initial-scale=1.0,viewport-fit=cover"
->
-<meta
-    name="theme-color"
-    content="#edf5f4"
->
-<title>
-    Glass Finance · Real Estate Copilot
-</title>
-<!-- =====================================================
-     PERFORMANCE OPTIMIZATION: CSS DELIVERY
-     Preload critical stylesheet to reduce render-blocking
-     ===================================================== -->
-<link
-    rel="preload"
-    href="style.css"
-    as="style"
->
-<link
-    rel="stylesheet"
-    href="style.css"
-    onload="this.onload=null;this.rel='stylesheet'"
->
-<noscript>
-    <link
-        rel="stylesheet"
-        href="style.css"
-    >
-</noscript>
-
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#edf5f4">
+<title>Glass Finance · Real Estate Copilot</title>
+<link rel="stylesheet" href="style.css">
 </head>
 
 <body>
 
-<!-- =====================================================
-     AMBIENT BACKGROUND
-     ===================================================== -->
-<div class="ambient ambient-a"></div>
-<div class="ambient ambient-b"></div>
-<div class="ambient ambient-c"></div>
-<!-- =====================================================
-     TOP BAR
-     ===================================================== -->
-<header class="topbar glass">
+<div class="ambient a"></div>
+<div class="ambient b"></div>
+
+<header class="top glass">
     <div class="brand">
-        <div class="brand-mark">
-            GF
-        </div>
+        <div class="mark">GF</div>
         <div>
-            <div class="brand-name">
-                Glass Finance
-            </div>
-            <div class="brand-sub">
-                REAL ESTATE COPILOT
-            </div>
+            <b>Glass Finance</b>
+            <small>REAL ESTATE COPILOT</small>
         </div>
     </div>
-    <div class="top-actions">
-        <span
-            id="saveStatus"
-            class="live-pill"
-        >
-            ● LIVE MODEL
-        </span>
-        <button
-            id="reset"
-            class="ghost-btn"
-            type="button"
-        >
-            Reset
-        </button>
+
+    <div>
+        <span id="saveStatus" class="live">● LIVE MODEL</span>
+        <button id="reset" class="ghost">Reset</button>
     </div>
 </header>
-<!-- =====================================================
-     NAVIGATION
-     ===================================================== -->
+
 <nav class="tabs glass">
-    <button
-        class="tab active"
-        data-view="finance"
-        type="button"
-    >
-        Finance
-    </button>
-    <button
-        class="tab"
-        data-view="returns"
-        type="button"
-    >
-        Returns
-    </button>
-    <button
-        class="tab"
-        data-view="scenarios"
-        type="button"
-    >
-        Scenarios
-    </button>
+    <button class="tab active" data-view="finance">Finance</button>
+    <button class="tab" data-view="returns">Returns</button>
+    <button class="tab" data-view="scenarios">Scenarios</button>
 </nav>
-<!-- =====================================================
-     MAIN APPLICATION
-     ===================================================== -->
-<main class="app-shell">
-    <!-- =================================================
-         FINANCE VIEW
-         ================================================= -->
-    <section
-        id="financeView"
-        class="view active"
-    >
-        <div class="hero glass">
+
+<main class="shell">
+
+<section id="financeView" class="view active">
+
+    <div class="hero glass">
+
+        <div>
+            <small>REAL ESTATE UNDERWRITING</small>
+
+            <h1>
+                See the deal <em>clearly.</em>
+            </h1>
+
+            <p>
+                Change the assumptions and watch the investment model respond instantly.
+            </p>
+        </div>
+
+        <div class="score">
+
+            <div class="ring">
+                <strong id="scoreValue">0</strong>
+                <span>/100</span>
+            </div>
+
             <div>
-                <div class="eyebrow">
-                    REAL ESTATE UNDERWRITING
-                </div>
-                <h1>
-                    See the deal
-                    <span>clearly.</span>
-                </h1>
+                <b>Investment signal</b>
                 <p>
-                    Build the investment,
-                    change the assumptions,
-                    and watch the model
-                    respond in real time.
+                    Screening score based on modeled returns and leverage.
                 </p>
             </div>
-            <div class="hero-score">
-                <div
-                    id="scoreRing"
-                    class="score-ring"
-                >
-                    <div class="score-inner">
-                        <strong id="scoreValue">
-                            0
-                        </strong>
-                        <span>
-                            /100
-                        </span>
-                    </div>
-                </div>
-                <div>
-                    <strong id="scoreLabel">
-                        Loading...
-                    </strong>
-                    <p id="scoreReason">
-                        Calculating the deal.
-                    </p>
-                    <button
-                        id="whyScore"
-                        class="text-btn"
-                        type="button"
-                    >
-                        Why this score →
-                    </button>
-                </div>
-            </div>
+
         </div>
-        <!-- =============================================
-             INPUTS + SNAPSHOT
-             ============================================= -->
-        <div class="two-column">
-            <section class="panel glass">
-                <div class="section-heading">
-                    <div>
-                        <div class="eyebrow">
-                            INPUTS
-                        </div>
-                        <h2>
-                            Deal assumptions
-                        </h2>
-                    </div>
-                    <span class="soft-badge">
-                        LIVE
-                    </span>
-                </div>
-                <div
-                    id="calculatorFields"
-                    class="calculator-fields"
-                >
-                </div>
-            </section>
-            <section class="panel glass">
-                <div class="section-heading">
-                    <div>
-                        <div class="eyebrow">
-                            SNAPSHOT
-                        </div>
-                        <h2>
-                            Year 1
-                        </h2>
-                    </div>
-                </div>
-                <div class="metric-grid">
-                    <div class="metric-card">
-                        <span>
-                            Initial cash
-                        </span>
-                        <strong id="initialCash">
-                            ₹0
-                        </strong>
-                    </div>
-                    <div class="metric-card">
-                        <span>
-                            Loan amount
-                        </span>
-                        <strong id="loan">
-                            ₹0
-                        </strong>
-                    </div>
-                    <div class="metric-card">
-                        <span>
-                            Monthly debt
-                        </span>
-                        <strong id="monthlyDebt">
-                            ₹0
-                        </strong>
-                    </div>
-                    <div class="metric-card">
-                        <span>
-                            Monthly cash flow
-                        </span>
-                        <strong id="cashflow">
-                            ₹0
-                        </strong>
-                    </div>
-                    <div class="metric-card">
-                        <span>
-                            Gross rent
-                        </span>
-                        <strong id="grossRent">
-                            ₹0
-                        </strong>
-                    </div>
-                    <div class="metric-card">
-                        <span>
-                            Collected rent
-                        </span>
-                        <strong id="collectedRent">
-                            ₹0
-                        </strong>
-                    </div>
-                    <div class="metric-card">
-                        <span>
-                            NOI
-                        </span>
-                        <strong id="noi">
-                            ₹0
-                        </strong>
-                    </div>
-                    <div class="metric-card">
-                        <span>
-                            Debt service
-                        </span>
-                        <strong id="debtService">
-                            ₹0
-                        </strong>
-                    </div>
-                </div>
-                <!-- =====================================
-                     COPILOT
-                     ===================================== -->
-                <div class="copilot glass-soft">
-                    <div class="copilot-header">
-                        <div class="copilot-avatar">
-                            ✦
-                        </div>
-                        <div>
-                            <strong>
-                                Financial Copilot
-                            </strong>
-                            <span>
-                                Ask about this deal
-                            </span>
-                        </div>
-                    </div>
-                    <div
-                        id="chatLog"
-                        class="chat-log"
-                    >
-                        <div class="chat-message bot">
-                            <div class="bubble">
-                                <strong>
-                                    Copilot
-                                </strong>
-                                <p>
-                                    I can analyze the
-                                    numbers you're
-                                    entering. Ask me
-                                    about IRR, cash flow,
-                                    risk, financing,
-                                    scenarios, or
-                                    “what if” questions.
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="suggestions">
-                        <button
-                            type="button"
-                            data-question="What is driving my return?"
-                        >
-                            What drives my return?
-                        </button>
-                        <button
-                            type="button"
-                            data-question="What is my weakest assumption?"
-                        >
-                            Biggest risk?
-                        </button>
-                        <button
-                            type="button"
-                            data-question="What happens if vacancy rises to 10%?"
-                        >
-                            10% vacancy
-                        </button>
-                    </div>
-                    <div class="chat-input-row">
-                        <input
-                            id="chatInput"
-                            type="text"
-                            placeholder="Ask about the investment..."
-                            autocomplete="off"
-                        >
-                        <button
-                            id="chatSend"
-                            class="send-btn"
-                            type="button"
-                        >
-                            →
-                        </button>
-                    </div>
-                </div>
-            </section>
-        </div>
-    </section>
-    <!-- =================================================
-         RETURNS VIEW
-         ================================================= -->
-    <section
-        id="returnsView"
-        class="view"
-    >
-        <div class="page-heading glass">
-            <div>
-                <div class="eyebrow">
-                    PERFORMANCE
-                </div>
-                <h1>
-                    Returns
-                </h1>
-                <p>
-                    Follow the investment from
-                    acquisition through exit.
-                </p>
-            </div>
-            <div
-                id="yearCount"
-                class="year-pill"
-            >
-                10 YEARS
-            </div>
-        </div>
-        <!-- =============================================
-             RETURN METRICS
-             ============================================= -->
-        <div class="return-grid">
-            <div class="return-card glass">
-                <span>
-                    IRR
-                </span>
-                <strong id="irr">
-                    0.00%
-                </strong>
-                <small>
-                    Annualized return
-                </small>
-            </div>
-            <div class="return-card glass">
-                <span>
-                    Cap Rate
-                </span>
-                <strong id="cap">
-                    0.00%
-                </strong>
-                <small>
-                    Year 1
-                </small>
-            </div>
-            <div class="return-card glass">
-                <span>
-                    Cash-on-Cash
-                </span>
-                <strong id="coc">
-                    0.00%
-                </strong>
-                <small>
-                    Year 1
-                </small>
-            </div>
-            <div class="return-card glass">
-                <span>
-                    Equity Multiple
-                </span>
-                <strong id="multiple">
-                    0.00×
-                </strong>
-                <small>
-                    Total capital multiple
-                </small>
-            </div>
-            <div class="return-card glass">
-                <span>
-                    DSCR
-                </span>
-                <strong id="dscr">
-                    0.00×
-                </strong>
-                <small>
-                    Debt coverage
-                </small>
-            </div>
-            <div class="return-card glass">
-                <span>
-                    Break-even
-                </span>
-                <strong id="breakEven">
-                    0.00%
-                </strong>
-                <small>
-                    Occupancy required
-                </small>
-            </div>
-            <div class="return-card glass">
-                <span>
-                    Exit Equity
-                </span>
-                <strong id="equity">
-                    ₹0
-                </strong>
-                <small>
-                    After sale costs & debt
-                </small>
-            </div>
-            <div class="return-card glass">
-                <span>
-                    LTV
-                </span>
-                <strong id="ltv">
-                    0.00%
-                </strong>
-                <small>
-                    Initial leverage
-                </small>
-            </div>
-        </div>
-        <!-- =============================================
-             CHART
-             ============================================= -->
-        <section class="panel glass chart-panel">
-            <div class="section-heading">
-                <div>
-                    <div class="eyebrow">
-                        EQUITY CURVE
-                    </div>
-                    <h2>
-                        Value over time
-                    </h2>
-                </div>
-                <div class="chart-legend">
-                    <span>
-                        <i class="legend-property"></i>
-                        Property value
-                    </span>
-                    <span>
-                        <i class="legend-equity"></i>
-                        Equity
-                    </span>
-                </div>
-            </div>
-            <div
-                id="chart"
-                class="chart"
-            >
-            </div>
-        </section>
-        <!-- =============================================
-             YEAR-BY-YEAR TABLE
-             ============================================= -->
-        <section class="panel glass table-panel">
-            <div class="section-heading">
-                <div>
-                    <div class="eyebrow">
-                        PROJECTION
-                    </div>
-                    <h2>
-                        Year-by-year model
-                    </h2>
-                </div>
-            </div>
-            <div class="table-wrap">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>
-                                Year
-                            </th>
-                            <th>
-                                Property value
-                            </th>
-                            <th>
-                                Gross rent
-                            </th>
-                            <th>
-                                NOI
-                            </th>
-                            <th>
-                                Loan balance
-                            </th>
-                            <th>
-                                Equity
-                            </th>
-                            <th>
-                                Cash flow
-                            </th>
-                        </tr>
-                    </thead>
-                    <tbody id="rows">
-                    </tbody>
-                </table>
-            </div>
-        </section>
-    </section>
-    <!-- =================================================
-         SCENARIOS VIEW
-         ================================================= -->
-    <section
-        id="scenariosView"
-        class="view"
-    >
-        <div class="page-heading glass">
-            <div>
-                <div class="eyebrow">
-                    STRESS TEST
-                </div>
-                <h1>
-                    Scenarios
-                </h1>
-                <p>
-                    See how the deal behaves when
-                    the assumptions move.
-                </p>
-            </div>
-        </div>
-        <!-- =============================================
-             SCENARIO CARDS
-             ============================================= -->
-        <section class="scenario-grid">
-            <div
-                id="scenarioCards"
-                class="scenario-grid-inner"
-            >
-            </div>
-        </section>
-        <!-- =============================================
-             SENSITIVITY
-             ============================================= -->
-        <section class="panel glass sensitivity-panel">
-            <div class="section-heading">
-                <div>
-                    <div class="eyebrow">
-                        SENSITIVITY
-                    </div>
-                    <h2>
-                        What moves the return?
-                    </h2>
-                </div>
-            </div>
-            <div
-                id="sensitivityRows"
-                class="sensitivity-rows"
-            >
-            </div>
-        </section>
-        <!-- =============================================
-             INVESTMENT TUNER
-             ============================================= -->
-        <section class="panel glass tuner-panel">
-            <div class="section-heading">
-                <div>
-                    <div class="eyebrow">
-                        INVESTMENT TUNER
-                    </div>
-                    <h2>
-                        Drag the assumptions
-                    </h2>
-                    <p>
-                        Move from downside to upside
-                        and watch the modeled IRR.
-                    </p>
-                </div>
-            </div>
-            <div class="tuner-wrap">
-                <div class="tuner-labels">
-                    <span>
-                        CONSERVATIVE
-                    </span>
-                    <span>
-                        BASE
-                    </span>
-                    <span>
-                        OPTIMISTIC
-                    </span>
-                </div>
-                <input
-                    id="tuner"
-                    class="tuner"
-                    type="range"
-                    min="0"
-                    max="100"
-                    value="50"
-                >
-                <div class="tuner-result">
-                    <div>
-                        <span>
-                            CURRENT CASE
-                        </span>
-                        <strong id="tunerLabel">
-                            BASE
-                        </strong>
-                    </div>
-                    <div class="tuner-irr">
-                        <span>
-                            MODELED IRR
-                        </span>
-                        <strong id="tunerIrr">
-                            0.00%
-                        </strong>
-                    </div>
-                </div>
-                <p
-                    id="tunerText"
-                    class="tuner-text"
-                >
-                    Stress-test the entire investment.
-                </p>
-            </div>
-        </section>
-    </section>
-</main>
-<!-- =====================================================
-     MODAL
-     ===================================================== -->
-<div
-    id="modal"
-    class="modal hidden"
->
-    <div class="modal-card glass">
-        <button
-            id="closeModal"
-            class="modal-close"
-            type="button"
-        >
-            ×
-        </button>
-        <div class="eyebrow">
-            GLASS FINANCE
-        </div>
-        <h2>
-            Investment analysis
-        </h2>
-        <p>
-            Your assumptions are calculated
-            locally in the browser.
-        </p>
+
     </div>
-</div>
-<!-- =====================================================
-     JAVASCRIPT
-     ===================================================== -->
-<script
-    src="script.js"
-    defer
-></script>
+
+
+    <div class="cols">
+
+        <section class="panel glass">
+
+            <div class="head">
+                <div>
+                    <small>INPUTS</small>
+                    <h2>Deal assumptions</h2>
+                </div>
+
+                <i>LIVE</i>
+            </div>
+
+            <div id="calculatorFields" class="fields"></div>
+
+        </section>
+
+
+        <section class="panel glass">
+
+            <div class="head">
+                <div>
+                    <small>SNAPSHOT</small>
+                    <h2>Year 1</h2>
+                </div>
+            </div>
+
+
+            <div class="metrics">
+
+                <div>
+                    <span>Initial cash</span>
+                    <b id="initialCash">₹0</b>
+                </div>
+
+                <div>
+                    <span>Loan</span>
+                    <b id="loan">₹0</b>
+                </div>
+
+                <div>
+                    <span>Monthly debt</span>
+                    <b id="monthlyDebt">₹0</b>
+                </div>
+
+                <div>
+                    <span>Monthly cash flow</span>
+                    <b id="cashflow">₹0</b>
+                </div>
+
+                <div>
+                    <span>Gross rent</span>
+                    <b id="grossRent">₹0</b>
+                </div>
+
+                <div>
+                    <span>NOI</span>
+                    <b id="noi">₹0</b>
+                </div>
+
+            </div>
+
+
+            <div class="copilot glass-soft">
+
+                <div class="chathead">
+                    <span>✦</span>
+
+                    <div>
+                        <b>Financial Copilot</b>
+                        <small>Ask about this deal</small>
+                    </div>
+                </div>
+
+
+                <div id="chatLog" class="chatlog">
+
+                    <div class="chat-message bot">
+
+                        <div class="bubble">
+                            <b>Copilot</b>
+
+                            <p>
+                                Ask me about IRR, cash flow,
+                                equity, financing, vacancy
+                                or what-if scenarios.
+                            </p>
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <div class="suggestions">
+
+                    <button data-question="What is my IRR?">
+                        What is my IRR?
+                    </button>
+
+                    <button data-question="What drives my return?">
+                        What drives my return?
+                    </button>
+
+                    <button data-question="What happens if vacancy rises to 10%?">
+                        10% vacancy
+                    </button>
+
+                </div>
+
+
+                <div class="chatrow">
+
+                    <input
+                        id="chatInput"
+                        placeholder="Ask about the investment..."
+                    >
+
+                    <button id="chatSend">
+                        →
+                    </button>
+
+                </div>
+
+            </div>
+
+        </section>
+
+    </div>
+
+</section>
+
+
+
+<section id="returnsView" class="view">
+
+    <div class="heading glass">
+
+        <div>
+            <small>PERFORMANCE</small>
+
+            <h1>Returns</h1>
+
+            <p>
+                Follow the investment from acquisition through exit.
+            </p>
+        </div>
+
+        <strong id="yearCount">
+            10 YEARS
+        </strong>
+
+    </div>
+
+
+    <div class="returngrid">
+
+        <div class="return glass">
+            <span>IRR</span>
+            <b id="irr">0%</b>
+        </div>
+
+        <div class="return glass">
+            <span>CAP RATE</span>
+            <b id="cap">0%</b>
+        </div>
+
+        <div class="return glass">
+            <span>CASH-ON-CASH</span>
+            <b id="coc">0%</b>
+        </div>
+
+        <div class="return glass">
+            <span>EQUITY MULTIPLE</span>
+            <b id="multiple">0×</b>
+        </div>
+
+        <div class="return glass">
+            <span>DSCR</span>
+            <b id="dscr">0×</b>
+        </div>
+
+        <div class="return glass">
+            <span>BREAK-EVEN</span>
+            <b id="breakEven">0%</b>
+        </div>
+
+        <div class="return glass">
+            <span>EXIT EQUITY</span>
+            <b id="equity">₹0</b>
+        </div>
+
+    </div>
+
+
+    <section class="panel glass">
+
+        <div class="head">
+            <div>
+                <small>EQUITY CURVE</small>
+                <h2>Value over time</h2>
+            </div>
+        </div>
+
+        <div id="chart" class="chart"></div>
+
+    </section>
+
+
+    <section class="panel glass">
+
+        <div class="head">
+            <div>
+                <small>PROJECTION</small>
+                <h2>Year-by-year model</h2>
+            </div>
+        </div>
+
+
+        <div class="tablewrap">
+
+            <table>
+
+                <thead>
+
+                    <tr>
+                        <th>Year</th>
+                        <th>Property value</th>
+                        <th>Gross rent</th>
+                        <th>NOI</th>
+                        <th>Loan balance</th>
+                        <th>Equity</th>
+                        <th>Cash flow</th>
+                    </tr>
+
+                </thead>
+
+                <tbody id="rows"></tbody>
+
+            </table>
+
+        </div>
+
+    </section>
+
+</section>
+
+
+
+<section id="scenariosView" class="view">
+
+    <div class="heading glass">
+
+        <div>
+
+            <small>STRESS TEST</small>
+
+            <h1>Scenarios</h1>
+
+            <p>
+                Compare conservative, base and optimistic assumptions.
+            </p>
+
+        </div>
+
+    </div>
+
+
+    <div id="scenarioCards" class="scenarios"></div>
+
+</section>
+
+</main>
+
+<script src="script.js" defer></script>
 
 </body>
-
 </html>
