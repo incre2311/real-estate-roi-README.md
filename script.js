@@ -1,144 +1,190 @@
 const $ = id => document.getElementById(id);
 
 const fields = [
-  'price','down','closing','reno','rate','term','rent','vacancy',
-  'tax','insurance','maint','management','appreciation',
-  'rentgrowth','hold','selling'
+  "price", "down", "closing", "reno",
+  "rate", "term", "rent", "vacancy",
+  "tax", "insurance", "maint", "management",
+  "appreciation", "rentgrowth", "hold", "selling"
 ];
 
 const defaults = {
-  price:5000000,
-  down:20,
-  closing:3,
-  reno:250000,
-  rate:8.5,
-  term:20,
-  rent:45000,
-  vacancy:5,
-  tax:60000,
-  insurance:24000,
-  maint:8,
-  management:8,
-  appreciation:4,
-  rentgrowth:3,
-  hold:10,
-  selling:6
+  price: 5000000,
+  down: 20,
+  closing: 3,
+  reno: 250000,
+  rate: 8.5,
+  term: 20,
+  rent: 45000,
+  vacancy: 5,
+  tax: 60000,
+  insurance: 24000,
+  maint: 8,
+  management: 8,
+  appreciation: 4,
+  rentgrowth: 3,
+  hold: 10,
+  selling: 6
 };
 
-const n = id => Math.max(0, Number($(id).value) || 0);
+function num(id) {
+  const el = $(id);
+  return el ? Math.max(0, Number(el.value) || 0) : 0;
+}
 
-const money = x =>
-  '₹' + Math.round(x).toLocaleString('en-IN');
+function money(value) {
+  return "₹" + Math.round(value).toLocaleString("en-IN");
+}
 
-const pct = x =>
-  (x * 100).toFixed(2) + '%';
-
-
-function mortgagePayment(principal, rate, years) {
-
-  const r = rate / 100 / 12;
-  const N = years * 12;
-
-  if (!principal) return 0;
-
-  if (!r) {
-    return principal / N;
-  }
-
-  return principal *
-    r *
-    Math.pow(1 + r, N) /
-    (Math.pow(1 + r, N) - 1);
+function percent(value) {
+  return (value * 100).toFixed(2) + "%";
 }
 
 
+/* =========================
+   MORTGAGE PAYMENT
+========================= */
+
+function mortgagePayment(principal, annualRate, years) {
+
+  if (principal <= 0) return 0;
+
+  const monthlyRate = annualRate / 100 / 12;
+  const months = years * 12;
+
+  if (monthlyRate === 0) {
+    return principal / months;
+  }
+
+  return (
+    principal *
+    monthlyRate *
+    Math.pow(1 + monthlyRate, months)
+  ) / (
+    Math.pow(1 + monthlyRate, months) - 1
+  );
+}
+
+
+/* =========================
+   IRR
+========================= */
+
 function calculateIRR(cashflows) {
 
-  let guess = 0.12;
+  let guess = 0.10;
 
   for (let iteration = 0; iteration < 100; iteration++) {
 
-    let f = 0;
+    let value = 0;
     let derivative = 0;
 
-    for (let t = 0; t < cashflows.length; t++) {
+    for (let year = 0; year < cashflows.length; year++) {
 
-      const denominator = Math.pow(1 + guess, t);
+      const denominator =
+        Math.pow(1 + guess, year);
 
-      f += cashflows[t] / denominator;
+      value +=
+        cashflows[year] / denominator;
 
-      if (t > 0) {
+      if (year > 0) {
 
         derivative -=
-          t *
-          cashflows[t] /
-          (denominator * (1 + guess));
+          year *
+          cashflows[year] /
+          Math.pow(1 + guess, year + 1);
       }
     }
 
-    if (Math.abs(derivative) < 0.000000000001) {
+    if (Math.abs(derivative) < 0.000000001) {
       break;
     }
 
-    const nextGuess =
-      guess - f / derivative;
+    const next =
+      guess - value / derivative;
 
     if (
-      !Number.isFinite(nextGuess) ||
-      nextGuess <= -0.99
+      !Number.isFinite(next) ||
+      next <= -0.99
     ) {
       guess /= 2;
       continue;
     }
 
-    if (Math.abs(nextGuess - guess) < 0.0000000001) {
-      return nextGuess;
+    if (Math.abs(next - guess) < 0.00000001) {
+      return next;
     }
 
-    guess = nextGuess;
+    guess = next;
   }
 
   return guess;
 }
 
 
+/* =========================
+   MAIN CALCULATOR
+========================= */
+
 function calculate() {
 
-  const price = n('price');
-  const down = n('down') / 100;
-  const closing = n('closing') / 100;
-  const renovation = n('reno');
+  const purchasePrice = num("price");
 
-  const interestRate = n('rate');
-  const loanTerm = n('term');
+  const downPayment =
+    num("down") / 100;
 
-  const startingRent = n('rent');
-  const vacancy = n('vacancy') / 100;
+  const closingCosts =
+    num("closing") / 100;
 
-  const propertyTax = n('tax');
-  const insurance = n('insurance');
+  const renovation =
+    num("reno");
 
-  const maintenanceRate = n('maint') / 100;
-  const managementRate = n('management') / 100;
+  const interestRate =
+    num("rate");
 
-  const appreciation = n('appreciation') / 100;
-  const rentGrowth = n('rentgrowth') / 100;
+  const loanTerm =
+    num("term");
+
+  const startingRent =
+    num("rent");
+
+  const vacancyRate =
+    num("vacancy") / 100;
+
+  const propertyTax =
+    num("tax");
+
+  const insurance =
+    num("insurance");
+
+  const maintenanceRate =
+    num("maint") / 100;
+
+  const managementRate =
+    num("management") / 100;
+
+  const appreciationRate =
+    num("appreciation") / 100;
+
+  const rentGrowthRate =
+    num("rentgrowth") / 100;
 
   const holdPeriod =
-    Math.max(1, Math.round(n('hold')));
+    Math.max(
+      1,
+      Math.round(num("hold"))
+    );
 
-  const sellingCost =
-    n('selling') / 100;
+  const sellingCostRate =
+    num("selling") / 100;
 
 
-  /*
-    INITIAL INVESTMENT
-  */
+  /* INITIAL INVESTMENT */
 
   const loanAmount =
-    price * (1 - down);
+    purchasePrice *
+    (1 - downPayment);
 
-  const mortgage =
+  const monthlyMortgage =
     mortgagePayment(
       loanAmount,
       interestRate,
@@ -146,46 +192,56 @@ function calculate() {
     );
 
   const initialCash =
-    price * down +
-    price * closing +
+    purchasePrice * downPayment +
+    purchasePrice * closingCosts +
     renovation;
 
 
-  /*
-    YEARLY MODEL
-  */
+  /* YEARLY MODEL */
 
-  let balance = loanAmount;
+  let loanBalance =
+    loanAmount;
 
-  let propertyValue = price;
+  let propertyValue =
+    purchasePrice;
 
-  let rent = startingRent;
+  let monthlyRent =
+    startingRent;
 
-  const data = [];
+  const yearlyData = [];
 
-  const cashflows = [-initialCash];
+  const cashflows = [
+    -initialCash
+  ];
 
 
-  for (let year = 1; year <= holdPeriod; year++) {
+  for (
+    let year = 1;
+    year <= holdPeriod;
+    year++
+  ) {
 
     propertyValue *=
-      1 + appreciation;
+      1 + appreciationRate;
 
-    rent *=
-      1 + rentGrowth;
+    monthlyRent *=
+      1 + rentGrowthRate;
 
 
     const grossRent =
-      rent * 12;
+      monthlyRent * 12;
 
     const collectedRent =
-      grossRent * (1 - vacancy);
+      grossRent *
+      (1 - vacancyRate);
 
     const maintenance =
-      grossRent * maintenanceRate;
+      grossRent *
+      maintenanceRate;
 
     const management =
-      collectedRent * managementRate;
+      collectedRent *
+      managementRate;
 
 
     const NOI =
@@ -196,283 +252,337 @@ function calculate() {
       insurance;
 
 
+    /* Mortgage amortization */
+
     let annualDebtService = 0;
 
+    for (
+      let month = 0;
+      month < 12;
+      month++
+    ) {
 
-    /*
-      Monthly mortgage amortization
-    */
+      if (loanBalance > 0) {
 
-    for (let month = 0; month < 12; month++) {
+        const monthlyInterest =
+          loanBalance *
+          (interestRate / 100 / 12);
 
-      const monthlyRate =
-        interestRate / 100 / 12;
+        const principalPayment =
+          Math.min(
+            loanBalance,
+            Math.max(
+              0,
+              monthlyMortgage -
+              monthlyInterest
+            )
+          );
 
-      const interest =
-        balance * monthlyRate;
+        loanBalance -=
+          principalPayment;
 
-      const principal =
-        Math.min(
-          balance,
+        loanBalance =
           Math.max(
             0,
-            mortgage - interest
-          )
-        );
+            loanBalance
+          );
+      }
 
-      balance =
-        Math.max(
-          0,
-          balance - principal
-        );
-
-      annualDebtService += mortgage;
+      annualDebtService +=
+        monthlyMortgage;
     }
 
 
-    const cashFlow =
-      NOI - annualDebtService;
+    const annualCashFlow =
+      NOI -
+      annualDebtService;
 
     const equity =
-      propertyValue - balance;
+      propertyValue -
+      loanBalance;
 
 
-    data.push({
+    yearlyData.push({
 
-      year,
+      year: year,
 
-      propertyValue,
+      propertyValue:
+        propertyValue,
 
-      grossRent,
+      grossRent:
+        grossRent,
 
-      NOI,
+      NOI:
+        NOI,
 
-      debtBalance: balance,
+      debtBalance:
+        loanBalance,
 
-      equity,
+      equity:
+        equity,
 
-      cashFlow
-
+      cashFlow:
+        annualCashFlow
     });
 
 
     cashflows.push(
-      cashFlow
+      annualCashFlow
     );
   }
 
 
-  /*
-    SALE
-  */
+  /* EXIT */
 
   const finalYear =
-    data[data.length - 1];
+    yearlyData[
+      yearlyData.length - 1
+    ];
 
 
-  const netSalePrice =
-    finalYear.propertyValue *
-    (1 - sellingCost);
+  const salePrice =
+    finalYear.propertyValue;
+
+
+  const sellingCosts =
+    salePrice *
+    sellingCostRate;
+
+
+  const netSale =
+    salePrice -
+    sellingCosts;
 
 
   const exitEquity =
-    netSalePrice -
+    netSale -
     finalYear.debtBalance;
 
 
-  /*
-    Add sale proceeds to final
-    year's cash flow
-  */
-
-  cashflows[cashflows.length - 1] +=
-    exitEquity;
+  cashflows[
+    cashflows.length - 1
+  ] += exitEquity;
 
 
-  /*
-    RETURNS
-  */
+  /* RETURNS */
 
   const totalProfit =
     cashflows.reduce(
-      (sum, value) => sum + value,
+      (total, value) =>
+        total + value,
       0
     );
 
 
-  const yearOne =
-    data[0];
+  const firstYear =
+    yearlyData[0];
 
 
   const capRate =
-    price > 0
-      ? yearOne.NOI / price
+    purchasePrice > 0
+      ? firstYear.NOI /
+        purchasePrice
       : 0;
 
 
   const cashOnCash =
     initialCash > 0
-      ? yearOne.cashFlow / initialCash
+      ? firstYear.cashFlow /
+        initialCash
       : 0;
 
 
   const totalROI =
     initialCash > 0
-      ? totalProfit / initialCash
+      ? totalProfit /
+        initialCash
       : 0;
 
 
   const IRR =
-    calculateIRR(cashflows);
+    calculateIRR(
+      cashflows
+    );
 
 
-  /*
-    UPDATE DASHBOARD
-  */
+  /* UPDATE METRICS */
 
-  $('cap').textContent =
-    pct(capRate);
+  if ($("cap"))
+    $("cap").textContent =
+      percent(capRate);
 
-  $('coc').textContent =
-    pct(cashOnCash);
+  if ($("coc"))
+    $("coc").textContent =
+      percent(cashOnCash);
 
-  $('cashflow').textContent =
-    money(yearOne.cashFlow / 12);
+  if ($("cashflow"))
+    $("cashflow").textContent =
+      money(
+        firstYear.cashFlow / 12
+      );
 
-  $('roi').textContent =
-    pct(totalROI);
+  if ($("roi"))
+    $("roi").textContent =
+      percent(totalROI);
 
-  $('irr').textContent =
-    pct(IRR);
+  if ($("irr"))
+    $("irr").textContent =
+      percent(IRR);
 
-  $('equity').textContent =
-    money(exitEquity);
+  if ($("equity"))
+    $("equity").textContent =
+      money(exitEquity);
 
+  if ($("updated"))
+    $("updated").textContent =
+      "● UPDATED";
 
-  if ($('updated')) {
-    $('updated').textContent =
-      '● UPDATED';
-  }
-
-
-  if ($('yearCount')) {
-    $('yearCount').textContent =
-      holdPeriod + ' YEARS';
-  }
-
-
-  /*
-    YEAR TABLE
-  */
-
-  $('rows').innerHTML =
-    data.map(row => `
-
-      <tr>
-
-        <td>${row.year}</td>
-
-        <td>
-          ${money(row.propertyValue)}
-        </td>
-
-        <td>
-          ${money(row.grossRent)}
-        </td>
-
-        <td>
-          ${money(row.NOI)}
-        </td>
-
-        <td>
-          ${money(row.debtBalance)}
-        </td>
-
-        <td>
-          ${money(row.equity)}
-        </td>
-
-        <td>
-          ${money(row.cashFlow)}
-        </td>
-
-      </tr>
-
-    `).join('');
+  if ($("yearCount"))
+    $("yearCount").textContent =
+      holdPeriod + " YEARS";
 
 
-  /*
-    DRAW CHART
-  */
+  /* UPDATE TABLE */
 
-  drawChart(data);
+  renderTable(
+    yearlyData
+  );
+
+
+  /* UPDATE GRAPH */
+
+  renderGraph(
+    yearlyData
+  );
 }
 
 
-function drawChart(data) {
+/* =========================
+   TABLE
+========================= */
 
-  const canvas =
-    $('chart');
+function renderTable(data) {
 
-  if (!canvas || !data.length) {
+  const table =
+    $("rows");
+
+  if (!table) return;
+
+  table.innerHTML = "";
+
+
+  data.forEach(row => {
+
+    const tr =
+      document.createElement("tr");
+
+
+    const values = [
+
+      row.year,
+
+      money(
+        row.propertyValue
+      ),
+
+      money(
+        row.grossRent
+      ),
+
+      money(
+        row.NOI
+      ),
+
+      money(
+        row.debtBalance
+      ),
+
+      money(
+        row.equity
+      ),
+
+      money(
+        row.cashFlow
+      )
+    ];
+
+
+    values.forEach(value => {
+
+      const td =
+        document.createElement("td");
+
+      td.textContent =
+        value;
+
+      tr.appendChild(td);
+    });
+
+
+    table.appendChild(tr);
+  });
+}
+
+
+/* =========================
+   SVG GRAPH
+========================= */
+
+function renderGraph(data) {
+
+  const oldChart =
+    $("chart");
+
+  if (!oldChart || !data.length) {
     return;
   }
 
 
-  const ctx =
-    canvas.getContext('2d');
+  const SVG_NS =
+    "http://www.w3.org/2000/svg";
 
 
-  const rect =
-    canvas.getBoundingClientRect();
+  const svg =
+    document.createElementNS(
+      SVG_NS,
+      "svg"
+    );
 
 
-  const dpr =
-    window.devicePixelRatio || 1;
-
-
-  const width =
-    Math.max(300, rect.width);
-
-  const height =
-    Math.max(260, rect.height);
-
-
-  canvas.width =
-    width * dpr;
-
-  canvas.height =
-    height * dpr;
-
-
-  ctx.setTransform(
-    dpr,
-    0,
-    0,
-    dpr,
-    0,
-    0
+  svg.setAttribute(
+    "viewBox",
+    "0 0 900 330"
   );
 
 
-  ctx.clearRect(
-    0,
-    0,
-    width,
-    height
+  svg.setAttribute(
+    "preserveAspectRatio",
+    "none"
   );
 
 
-  const left = 58;
-  const right = 20;
-  const top = 24;
-  const bottom = 40;
+  svg.style.width =
+    "100%";
+
+  svg.style.height =
+    "100%";
+
+  svg.style.display =
+    "block";
 
 
-  const plotWidth =
+  const width = 900;
+  const height = 330;
+
+  const left = 75;
+  const right = 25;
+  const top = 30;
+  const bottom = 45;
+
+  const graphWidth =
     width - left - right;
 
-  const plotHeight =
+  const graphHeight =
     height - top - bottom;
 
 
@@ -488,156 +598,213 @@ function drawChart(data) {
     );
 
 
-  const x = index =>
-    left +
-    plotWidth *
-    index /
-    Math.max(
-      1,
-      data.length - 1
-    );
+  function x(index) {
 
-
-  const y = value =>
-    top +
-    plotHeight *
-    (1 - value / maximum);
-
-
-  /*
-    GRID
-  */
-
-  ctx.strokeStyle =
-    '#292d33';
-
-  ctx.lineWidth = 1;
-
-
-  ctx.font =
-    '10px -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif';
-
-
-  ctx.fillStyle =
-    '#70757c';
-
-  ctx.textAlign =
-    'right';
-
-
-  for (let i = 0; i < 5; i++) {
-
-    const yy =
-      top +
-      plotHeight * i / 4;
-
-
-    ctx.beginPath();
-
-    ctx.moveTo(
-      left,
-      yy
-    );
-
-    ctx.lineTo(
-      width - right,
-      yy
-    );
-
-    ctx.stroke();
-
-
-    ctx.fillText(
-      money(
-        maximum * (1 - i / 4)
-      ),
-      left - 7,
-      yy + 3
+    return (
+      left +
+      graphWidth *
+      index /
+      Math.max(
+        1,
+        data.length - 1
+      )
     );
   }
 
 
-  /*
-    DRAW SERIES
-  */
+  function y(value) {
 
-  function drawSeries(
-    property,
-    color,
-    lineWidth
+    return (
+      top +
+      graphHeight *
+      (
+        1 -
+        value / maximum
+      )
+    );
+  }
+
+
+  function element(
+    name,
+    attributes
   ) {
 
-    ctx.beginPath();
+    const node =
+      document.createElementNS(
+        SVG_NS,
+        name
+      );
 
 
-    data.forEach(
-      (row, index) => {
+    Object.entries(
+      attributes
+    ).forEach(
+      ([key, value]) => {
 
-        const px =
-          x(index);
-
-        const py =
-          y(row[property]);
-
-
-        if (index === 0) {
-
-          ctx.moveTo(
-            px,
-            py
-          );
-
-        } else {
-
-          ctx.lineTo(
-            px,
-            py
-          );
-        }
+        node.setAttribute(
+          key,
+          value
+        );
       }
     );
 
 
-    ctx.strokeStyle =
-      color;
-
-    ctx.lineWidth =
-      lineWidth;
-
-    ctx.lineJoin =
-      'round';
-
-    ctx.lineCap =
-      'round';
-
-    ctx.stroke();
+    return node;
   }
 
 
-  drawSeries(
-    'propertyValue',
-    '#d6a96b',
-    4
+  /* GRID */
+
+  for (
+    let i = 0;
+    i < 5;
+    i++
+  ) {
+
+    const yy =
+      top +
+      graphHeight *
+      i / 4;
+
+
+    svg.appendChild(
+      element(
+        "line",
+        {
+          x1: left,
+          y1: yy,
+          x2: width - right,
+          y2: yy,
+          stroke: "#292d33",
+          "stroke-width": "1"
+        }
+      )
+    );
+
+
+    const label =
+      element(
+        "text",
+        {
+          x: left - 8,
+          y: yy + 4,
+          "text-anchor": "end",
+          fill: "#70757c",
+          "font-size": "11"
+        }
+      );
+
+
+    label.textContent =
+      money(
+        maximum *
+        (1 - i / 4)
+      );
+
+
+    svg.appendChild(
+      label
+    );
+  }
+
+
+  /* PROPERTY VALUE LINE */
+
+  const propertyPoints =
+    data.map(
+      (row, index) =>
+        `${x(index)},${y(
+          row.propertyValue
+        )}`
+    ).join(" ");
+
+
+  /* EQUITY LINE */
+
+  const equityPoints =
+    data.map(
+      (row, index) =>
+        `${x(index)},${y(
+          Math.max(
+            0,
+            row.equity
+          )
+        )}`
+    ).join(" ");
+
+
+  /* PROPERTY AREA */
+
+  svg.appendChild(
+    element(
+      "polygon",
+      {
+        points:
+          `${left},${height-bottom} ` +
+          propertyPoints +
+          ` ${x(data.length-1)},${height-bottom}`,
+        fill: "#d6a96b",
+        opacity: "0.12"
+      }
+    )
   );
 
 
-  drawSeries(
-    'equity',
-    '#8ec8ad',
-    3
+  /* EQUITY AREA */
+
+  svg.appendChild(
+    element(
+      "polygon",
+      {
+        points:
+          `${left},${height-bottom} ` +
+          equityPoints +
+          ` ${x(data.length-1)},${height-bottom}`,
+        fill: "#8ec8ad",
+        opacity: "0.10"
+      }
+    )
   );
 
 
-  /*
-    YEAR LABELS
-  */
+  /* PROPERTY LINE */
 
-  ctx.fillStyle =
-    '#70757c';
+  svg.appendChild(
+    element(
+      "polyline",
+      {
+        points:
+          propertyPoints,
+        fill: "none",
+        stroke: "#d6a96b",
+        "stroke-width": "5",
+        "stroke-linecap": "round",
+        "stroke-linejoin": "round"
+      }
+    )
+  );
 
-  ctx.textAlign =
-    'center';
 
+  /* EQUITY LINE */
+
+  svg.appendChild(
+    element(
+      "polyline",
+      {
+        points:
+          equityPoints,
+        fill: "none",
+        stroke: "#8ec8ad",
+        "stroke-width": "4",
+        "stroke-linecap": "round",
+        "stroke-linejoin": "round"
+      }
+    )
+  );
+
+
+  /* YEAR LABELS */
 
   data.forEach(
     (row, index) => {
@@ -648,54 +815,142 @@ function drawChart(data) {
         index % 5 === 0
       ) {
 
-        ctx.fillText(
-          'Y' + row.year,
-          x(index),
-          height - 12
+        const label =
+          element(
+            "text",
+            {
+              x: x(index),
+              y: height - 15,
+              "text-anchor": "middle",
+              fill: "#70757c",
+              "font-size": "11"
+            }
+          );
+
+
+        label.textContent =
+          "Y" + row.year;
+
+
+        svg.appendChild(
+          label
         );
       }
     }
   );
+
+
+  /* LEGEND */
+
+  const propertyLegend =
+    element(
+      "text",
+      {
+        x: left,
+        y: 16,
+        fill: "#d6a96b",
+        "font-size": "11"
+      }
+    );
+
+
+  propertyLegend.textContent =
+    "● Property value";
+
+
+  svg.appendChild(
+    propertyLegend
+  );
+
+
+  const equityLegend =
+    element(
+      "text",
+      {
+        x: left + 145,
+        y: 16,
+        fill: "#8ec8ad",
+        "font-size": "11"
+      }
+    );
+
+
+  equityLegend.textContent =
+    "● Equity";
+
+
+  svg.appendChild(
+    equityLegend
+  );
+
+
+  /* REPLACE OLD GRAPH */
+
+  oldChart.replaceWith(
+    svg
+  );
+
+
+  /*
+    IMPORTANT:
+    The new SVG must keep the ID "chart"
+    so the next calculation can replace
+    it again.
+  */
+
+  svg.id =
+    "chart";
 }
 
 
-/*
-  LIVE INPUTS
-*/
+/* =========================
+   LIVE INPUTS
+========================= */
 
 fields.forEach(
   id => {
 
-    $(id).addEventListener(
-      'input',
+    const input =
+      $(id);
+
+    if (!input) return;
+
+
+    input.addEventListener(
+      "input",
       calculate
     );
 
-    $(id).addEventListener(
-      'change',
+
+    input.addEventListener(
+      "change",
       calculate
     );
   }
 );
 
 
-/*
-  RESET BUTTON
-*/
+/* =========================
+   RESET
+========================= */
 
-if ($('reset')) {
+if ($("reset")) {
 
-  $('reset').addEventListener(
-    'click',
+  $("reset").addEventListener(
+    "click",
     () => {
 
       fields.forEach(
         id => {
 
-          $(id).value =
-            defaults[id];
+          if ($(id)) {
+
+            $(id).value =
+              defaults[id];
+          }
         }
       );
+
 
       calculate();
     }
@@ -703,18 +958,18 @@ if ($('reset')) {
 }
 
 
-/*
-  RESPONSIVE CHART
-*/
+/* =========================
+   RESIZE
+========================= */
 
 window.addEventListener(
-  'resize',
+  "resize",
   calculate
 );
 
 
-/*
-  INITIAL CALCULATION
-*/
+/* =========================
+   INITIAL LOAD
+========================= */
 
 calculate();
